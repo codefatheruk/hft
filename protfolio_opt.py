@@ -85,3 +85,9 @@ for i in main_df.keys():
     names=[j for j in df.columns if i in j]
     main_df[i]=df[names]
     main_df[i].columns=c_name
+
+window_size=5
+# Generate log return for each dataframe in main_df
+for currency, df in main_df.items():
+    df['log_return'] = np.log(df['close'] / df['close'].shift(window_size))
+    df['log_return'] = df['log_return'].fillna(0)
