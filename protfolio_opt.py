@@ -43,11 +43,12 @@ column_names = [['Date']] \
                + [[f'AP{i}', f'AV{i}'] for i in range(1, 6)] \
                + [['']]
 column_names = list(itertools.chain.from_iterable(column_names))
-
+print(aaa)
 main_df = {i: pd.DataFrame() for i in currenies}
 for i in main_df.keys():
     df = pd.DataFrame()
-    for j in file_currency[i]:
+    print(file_currency[i][:3])
+    for j in file_currency[i][:3]:
         temp_df = pd.read_csv(j, index_col=0, parse_dates=True, names=column_names)
         temp_df.drop(['M', ''], axis=1, inplace=True)
         temp_df = temp_df.resample('100ms').mean()
@@ -90,13 +91,13 @@ train_test_data = {}
 model_predictions={}
 for currency, df in main_df.items():
     df['log_return'] = np.log(df['close'] / df['close'].shift(window_size))
-    df['log_return_cat'] = df['log_return'].apply(lambda x: 1 if x > 0 else (-1 if x < 0 else 0))
+    df['log_return_cat'] = df['log_return'].apply(lambda x: 1 if x > 0 else (2 if x < 0 else 0))
     df['log_return_cat'] = df['log_return_cat'].fillna(0)
     X = df.drop(['log_return', 'log_return_cat'], axis=1)
     y = df['log_return_cat']
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
     train_test_data[currency] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
-    # Train LightGBM model
+    # Train LightGBM modelm
     lgb_train = lgb.Dataset(X_train, y_train)
     lgb_eval = lgb.Dataset(X_test, y_test, reference=lgb_train)
     params = {
@@ -114,8 +115,7 @@ for currency, df in main_df.items():
     gbm = lgb.train(params,
                     lgb_train,
                     num_boost_round=20,
-                    valid_sets=lgb_eval,
-                    early_stopping_rounds=5)
+                    valid_sets=lgb_eval)
 
     # Save the model
     joblib.dump(gbm, f'{currency}_lgbm_model.pkl')
