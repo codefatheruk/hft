@@ -47,11 +47,11 @@ print(aaa)
 main_df = {i: pd.DataFrame() for i in currenies}
 for i in main_df.keys():
     df = pd.DataFrame()
-    print(file_currency[i][:3])
-    for j in file_currency[i][:3]:
+    print(file_currency[i][:5])
+    for j in file_currency[i][:5]:
         temp_df = pd.read_csv(j, index_col=0, parse_dates=True, names=column_names)
         temp_df.drop(['M', ''], axis=1, inplace=True)
-        temp_df = temp_df.resample('100ms').mean()
+        temp_df = temp_df.resample('1s').mean()
         df = pd.concat([df, temp_df])
     df.fillna(method='ffill', inplace=True)
     df.fillna(method='bfill', inplace=True)
@@ -62,7 +62,6 @@ for i in main_df.keys():
     df['low'] = df['price'].rolling(20).min()
     df['open'] = df['price'].rolling(20).apply(lambda x: x.iloc[0])
     df['close'] = df['price'].rolling(20).apply(lambda x: x.iloc[-1])
-    df.drop(['price'], axis=1, inplace=True)
     main_df[i] = df
 
 
@@ -90,9 +89,10 @@ window_size=5
 train_test_data = {}
 model_predictions={}
 for currency, df in main_df.items():
-    df['log_return'] = np.log(df['close'] / df['close'].shift(window_size))
+    df['log_return'] = np.log(df['price'] / df['price'].shift(window_size))
     df['log_return_cat'] = df['log_return'].apply(lambda x: 1 if x > 0 else (2 if x < 0 else 0))
     df['log_return_cat'] = df['log_return_cat'].fillna(0)
+    df.dropna(inplace=True)
     X = df.drop(['log_return', 'log_return_cat'], axis=1)
     y = df['log_return_cat']
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
@@ -122,5 +122,24 @@ for currency, df in main_df.items():
 
     # Make predictions
     y_pred = gbm.predict(X_test, num_iteration=gbm.best_iteration)
-    model_predictions[currency] = y_pred
+    model_predictions[currency] = pd.DataFrame(y_pred)
 
+
+tick_move=0.001
+protfolio={i:{'expected_price':[],'volatility':[]} for i in currenies}
+for i in currenies:
+    expect_price=[]
+    volatility=[]
+    for j in range(len(train_test_data[i]['X_test'])):
+        price_t=train_test_data[i]['X_test'].price.values[j]
+        prob=model_predictions[i].values[j]
+        expect_price_t=price_t + (prob[1]*tick_move) - (prob[2]*tick_move)
+        volatility_t=(prob[0]*(price_t)**2) + (prob[1]*(price_t+tick_move)**2) + (prob[2]*(price_t-tick_move)**2) - (expect_price_t)**2
+        expect_price.append(expect_price_t)
+        volatility.append(volatility_t)
+    protfolio[i]['expect_price']=expect_price
+    protfolio[i]['volatility']=volatility
+    protfolio[i]=pd.DataFrame([protfolio[i]['expect_price'],protfolio[i]['volatility']]).T
+    protfolio[i].columns=['expect_price','volatility']   
+
+    
