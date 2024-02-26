@@ -43,7 +43,7 @@ column_names = [['Date']] \
                + [[f'AP{i}', f'AV{i}'] for i in range(1, 6)] \
                + [['']]
 column_names = list(itertools.chain.from_iterable(column_names))
-print(aaa)
+
 main_df = {i: pd.DataFrame() for i in currenies}
 for i in main_df.keys():
     df = pd.DataFrame()
