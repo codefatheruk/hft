@@ -72,7 +72,7 @@ index=main_df[min_length_df].index
 c_name=main_df[min_length_df].columns
 
 for i in main_df.keys():
-    main_df[i].columns=[j+i for j in main_df[i].columns ]
+    main_df[i].columns=[j+i for j in main_df[i].columns]
 
 df=pd.concat([main_df[i] for i in main_df.keys()],axis=1)
 df.dropna(inplace=True)
@@ -125,7 +125,7 @@ for currency, df in main_df.items():
     model_predictions[currency] = pd.DataFrame(y_pred)
 
 
-tick_move=0.001
+tick_move=0.0001
 protfolio={i:{'expected_price':[],'volatility':[]} for i in currenies}
 for i in currenies:
     expect_price=[]
@@ -140,6 +140,6 @@ for i in currenies:
     protfolio[i]['expect_price']=expect_price
     protfolio[i]['volatility']=volatility
     protfolio[i]=pd.DataFrame([protfolio[i]['expect_price'],protfolio[i]['volatility']]).T
-    protfolio[i].columns=['expect_price','volatility']   
+    protfolio[i].columns=['expect_price','volatility']
 
     
