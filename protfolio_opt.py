@@ -126,7 +126,7 @@ for currency, df in main_df.items():
 
 
 tick_move=0.0001
-protfolio={i:{'expected_price':[],'volatility':[]} for i in currenies}
+protfolio={'expect_price':{i:[] for i in currenies},'volatility':{i:[] for i in currenies}}
 for i in currenies:
     expect_price=[]
     volatility=[]
@@ -137,9 +137,9 @@ for i in currenies:
         volatility_t=(prob[0]*(price_t)**2) + (prob[1]*(price_t+tick_move)**2) + (prob[2]*(price_t-tick_move)**2) - (expect_price_t)**2
         expect_price.append(expect_price_t)
         volatility.append(volatility_t)
-    protfolio[i]['expect_price']=expect_price
-    protfolio[i]['volatility']=volatility
-    protfolio[i]=pd.DataFrame([protfolio[i]['expect_price'],protfolio[i]['volatility']]).T
-    protfolio[i].columns=['expect_price','volatility']
+    protfolio['expect_price'][i]=expect_price
+    protfolio['volatility'][i]=volatility
 
-    
+expect_price=pd.DataFrame(protfolio['expect_price'])
+volatility=pd.DataFrame(protfolio['volatility'])
+
