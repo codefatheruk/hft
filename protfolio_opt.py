@@ -85,6 +85,10 @@ for i in main_df.keys():
     main_df[i]=df[names]
     main_df[i].columns=c_name
 
+mid_price=pd.DataFrame()
+for i in currenies:
+    mid_price[i]=main_df[i].price
+
 window_size=5
 # Generate log return for each dataframe in main_df, categorize it, and split datasets into train and test
 train_test_data = {}
