@@ -7,6 +7,7 @@ import os
 from glob import glob
 import itertools
 import joblib  # For saving models
+import scipy.optimize as sco
 
 os.getcwd()
 os.chdir('/Users/macbookpro/Documents/data')
@@ -97,7 +98,7 @@ for currency, df in main_df.items():
     y = df['log_return_cat']
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
     train_test_data[currency] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
-    # Train LightGBM modelm
+    # Train LightGBM model
     lgb_train = lgb.Dataset(X_train, y_train)
     lgb_eval = lgb.Dataset(X_test, y_test, reference=lgb_train)
     params = {
@@ -143,3 +144,36 @@ for i in currenies:
 expect_price=pd.DataFrame(protfolio['expect_price'])
 volatility=pd.DataFrame(protfolio['volatility'])
 
+# Portfolio Optimization and Trade Simulation
+initial_investment = 10000
+portfolio_value = initial_investment
+trade_log = []
+
+def optimize_portfolio(weights):
+    # Minimize the negative Sharpe ratio
+    return -np.sum(expect_price.mean() * weights) / np.sqrt(np.dot(weights.T, np.dot(expect_price.cov(), weights)))
+
+for date in expect_price.index:
+    # Constraints: Weights sum to 1
+    constraints = ({'type': 'eq', 'fun': lambda x: np.sum(x) - 1})
+    # Bounds for weights
+    bounds = tuple((0, 1) for _ in range(len(currenies)))
+    # Initial guess
+    initial_weights = np.array(len(currenies) * [1. / len(currenies),])
+    
+    # Optimization
+    result = sco.minimize(optimize_portfolio, initial_weights, method='SLSQP', bounds=bounds, constraints=constraints)
+    weights = result.x
+    
+    # Adjust portfolio based on expected price and volatility
+    adjusted_portfolio = dict(zip(currenies, weights))
+    
+    # Calculate expected portfolio value
+    expected_return = sum(expect_price.loc[date, currency] * weight for currency, weight in adjusted_portfolio.items())
+    portfolio_value += expected_return
+    
+    # Record trade
+    trade_log.append((date, portfolio_value, adjusted_portfolio))
+
+final_portfolio_value = trade_log[-1][1]
+print(f"Final Portfolio Value: ${final_portfolio_value:.2f} from an initial investment of ${initial_investment}")
