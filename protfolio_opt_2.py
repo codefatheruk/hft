@@ -1,24 +1,3 @@
-
-Conversation opened. 3 messages. 1 message unread.
-
-Skip to content
-Using Gmail with screen readers
-1 of 9
-(no subject)
-Inbox
-
-codefather uk
-Feb 26, 2024, 6:44 PM (20 hours ago)
-import pandas as pd # Define start and end dates start_date = '2024-02-19' end_date = '2024-02-26' # Create date range with 5-minute intervals excluding weekend
-
-nad inook
-Feb 26, 2024, 7:13 PM (19 hours ago)
-import pandas as pd import numpy as np from pypfopt.efficient_frontier import EfficientFrontier from pypfopt import risk_models, expected_returns mid_price = pd
-
-nad inook
-2:44 PM (16 minutes ago)
-to me
-
 import pandas as pd
 import numpy as np
 from pypfopt.efficient_frontier import EfficientFrontier
