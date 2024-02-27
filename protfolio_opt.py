@@ -27,8 +27,7 @@ for i in file_names:
         if j in i:
             dates[j].append(i.split('_')[2])
 
-common_dates=set(dates['EURUSD']) & set(dates['USDCAD']) & set(dates['GBPUSD'])
-
+common_dates=set(dates[currenies[0]]) & set(dates[currenies[1]]) & set(dates[currenies[2]])
 
 file_currency_filter={i:[] for i in currenies}
 for i in file_names:
@@ -48,11 +47,11 @@ column_names = list(itertools.chain.from_iterable(column_names))
 main_df = {i: pd.DataFrame() for i in currenies}
 for i in main_df.keys():
     df = pd.DataFrame()
-    print(file_currency[i][:5])
-    for j in file_currency[i][:5]:
+    print(file_currency[i][:10])
+    for j in file_currency[i][:10]:
         temp_df = pd.read_csv(j, index_col=0, parse_dates=True, names=column_names)
         temp_df.drop(['M', ''], axis=1, inplace=True)
-        temp_df = temp_df.resample('1s').mean()
+        temp_df = temp_df.resample('30s').mean()
         df = pd.concat([df, temp_df])
     df.fillna(method='ffill', inplace=True)
     df.fillna(method='bfill', inplace=True)
@@ -67,6 +66,7 @@ for i in main_df.keys():
 
 
 lenth={i:main_df[i].dropna().shape[0] for i in main_df.keys()}
+
 min_length_df = min(lenth, key=lenth.get)
 index=main_df[min_length_df].index
 
@@ -150,37 +150,3 @@ for i in currenies:
 
 expect_price=pd.DataFrame(protfolio['expect_price'])
 volatility=pd.DataFrame(protfolio['volatility'])
-
-# Portfolio Optimization and Trade Simulation
-initial_investment = 10000
-portfolio_value = initial_investment
-trade_log = []
-
-def optimize_portfolio(weights):
-    # Minimize the negative Sharpe ratio
-    return -np.sum(expect_price.mean() * weights) / np.sqrt(np.dot(weights.T, np.dot(expect_price.cov(), weights)))
-
-for date in expect_price.index:
-    # Constraints: Weights sum to 1
-    constraints = ({'type': 'eq', 'fun': lambda x: np.sum(x) - 1})
-    # Bounds for weights
-    bounds = tuple((0, 1) for _ in range(len(currenies)))
-    # Initial guess
-    initial_weights = np.array(len(currenies) * [1. / len(currenies),])
-    
-    # Optimization
-    result = sco.minimize(optimize_portfolio, initial_weights, method='SLSQP', bounds=bounds, constraints=constraints)
-    weights = result.x
-    
-    # Adjust portfolio based on expected price and volatility
-    adjusted_portfolio = dict(zip(currenies, weights))
-    
-    # Calculate expected portfolio value
-    expected_return = sum(expect_price.loc[date, currency] * weight for currency, weight in adjusted_portfolio.items())
-    portfolio_value += expected_return
-    
-    # Record trade
-    trade_log.append((date, portfolio_value, adjusted_portfolio))
-
-final_portfolio_value = trade_log[-1][1]
-print(f"Final Portfolio Value: ${final_portfolio_value:.2f} from an initial investment of ${initial_investment}")

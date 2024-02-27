@@ -1,10 +1,29 @@
+
+Conversation opened. 3 messages. 1 message unread.
+
+Skip to content
+Using Gmail with screen readers
+1 of 9
+(no subject)
+Inbox
+
+codefather uk
+Feb 26, 2024, 6:44 PM (20 hours ago)
+import pandas as pd # Define start and end dates start_date = '2024-02-19' end_date = '2024-02-26' # Create date range with 5-minute intervals excluding weekend
+
+nad inook
+Feb 26, 2024, 7:13 PM (19 hours ago)
+import pandas as pd import numpy as np from pypfopt.efficient_frontier import EfficientFrontier from pypfopt import risk_models, expected_returns mid_price = pd
+
+nad inook
+2:44 PM (16 minutes ago)
+to me
+
 import pandas as pd
 import numpy as np
 from pypfopt.efficient_frontier import EfficientFrontier
 from pypfopt import risk_models, expected_returns
-import os
 
-os.chdir('/Users/macbookpro/Documents/data')
 
 mid_price = pd.read_csv("mid_price.csv")
 #mid_price = mid_price.set_index("time")            
@@ -29,6 +48,17 @@ def deviation_risk_parity(w, cov_matrix):
     diff = w * np.dot(cov_matrix, w) - (w * np.dot(cov_matrix, w)).reshape(-1, 1)
     return (diff**2).sum().sum()
 
+
+S = risk_models.sample_cov(mid_price[tickers])
+print(S)
+
+
+current_value = 1.0
+current_portfolio = [1.0/3/mid_price["USDCAD"].iloc[0], 
+                     1.0/3/mid_price["EURUSD"].iloc[0], 
+                     1.0/3/mid_price["GBPUSD"].iloc[0]]
+
+
 for i in range(len(date_range)-1):
     if(date_range[i].weekday() > 4):
         continue
@@ -42,15 +72,24 @@ for i in range(len(date_range)-1):
     if(df.shape[0] < 1):
         continue
     mu = expected_returns.mean_historical_return(df[tickers])
-    S = risk_models.sample_cov(df[tickers])
+    
     #print(mu)
     ef = EfficientFrontier(mu, S, weight_bounds=(-1, 1))
+    #ef._risk_free_rate = 0.01
     weights = ef.nonconvex_objective(deviation_risk_parity, ef.cov_matrix)
-    ef.portfolio_performance(verbose=True)
-    portfolio_performance.loc[period_end, 'Return'] = np.sum(list(weights.values()))
+    #print(weights)
+    #print(ef._risk_free_rate)
+    #ef.portfolio_performance(verbose=True,risk_free_rate=0.0000000002)
+    current_value = current_portfolio[0]*df["USDCAD"].iloc[-1]+current_portfolio[1]*df["EURUSD"].iloc[-1]+current_portfolio[2]*df["GBPUSD"].iloc[-1]
+    current_portfolio = [current_value*weights["USDCAD"]/df["USDCAD"].iloc[-1], 
+                     current_value*weights["EURUSD"]/df["EURUSD"].iloc[-1], 
+                     current_value*weights["GBPUSD"]/df["GBPUSD"].iloc[-1]]
+    portfolio_performance.loc[period_end, 'Return'] = current_value
     if(mu["EURUSD"] == 0):
         print("finished")
 
 # Print the portfolio performance
 print(portfolio_performance)
 portfolio_performance.to_csv("portfolio_performance.csv")
+
+Thanks a lot.Thanks, I'll check it out.Fixed!
