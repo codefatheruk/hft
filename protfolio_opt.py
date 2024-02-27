@@ -47,11 +47,11 @@ column_names = list(itertools.chain.from_iterable(column_names))
 main_df = {i: pd.DataFrame() for i in currenies}
 for i in main_df.keys():
     df = pd.DataFrame()
-    print(file_currency[i][:10])
-    for j in file_currency[i][:10]:
+    print(file_currency[i][:30])
+    for j in file_currency[i][:30]:
         temp_df = pd.read_csv(j, index_col=0, parse_dates=True, names=column_names)
         temp_df.drop(['M', ''], axis=1, inplace=True)
-        temp_df = temp_df.resample('30s').mean()
+        temp_df = temp_df.resample('60s').mean()
         df = pd.concat([df, temp_df])
     df.fillna(method='ffill', inplace=True)
     df.fillna(method='bfill', inplace=True)
@@ -103,7 +103,7 @@ for currency, df in main_df.items():
     df.dropna(inplace=True)
     X = df.drop(['log_return', 'log_return_cat'], axis=1)
     y = df['log_return_cat']
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2,shuffle=False)
     train_test_data[currency] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
     # Train LightGBM model
     lgb_train = lgb.Dataset(X_train, y_train)
@@ -151,14 +151,14 @@ for i in currenies:
 expect_price=pd.DataFrame(protfolio['expect_price'])
 volatility=pd.DataFrame(protfolio['volatility'])
 
-histcal_price=pd.DataFrame([train_test_data[i]['X_test'].price for i in currenies]).T
+histcal_price=pd.DataFrame([pd.concat([train_test_data[i]['X_train'].price.tail(30),train_test_data[i]['X_test'].price] ,axis=0) for i in currenies]).T
 histcal_price.columns=currenies
-histcal_bid=pd.DataFrame([train_test_data[i]['X_test'].BP1 for i in currenies]).T
+histcal_bid=pd.DataFrame([pd.concat([train_test_data[i]['X_train'].BP1.tail(30),train_test_data[i]['X_test'].BP1] ,axis=0) for i in currenies]).T
 histcal_bid.columns=currenies
-histcal_ask=pd.DataFrame([train_test_data[i]['X_test'].AP1 for i in currenies]).T
+histcal_ask=pd.DataFrame([pd.concat([train_test_data[i]['X_train'].AP1.tail(30),train_test_data[i]['X_test'].AP1] ,axis=0) for i in currenies]).T
 histcal_ask.columns=currenies
 
 expect_price.index=train_test_data[currenies[0]]['X_test'].index
 volatility.index=train_test_data[currenies[0]]['X_test'].index
-
-
+expect_price=pd.concat([histcal_price.head(30),expect_price],axis=0)
+volatility=pd.concat([histcal_price.head(30),volatility],axis=0)
