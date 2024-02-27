@@ -92,7 +92,7 @@ for i in currenies:
 
 mid_price.to_csv('mid_price.csv',index=True)
 
-window_size=5
+window_size=1
 # Generate log return for each dataframe in main_df, categorize it, and split datasets into train and test
 train_test_data = {}
 model_predictions={}
@@ -150,5 +150,15 @@ for i in currenies:
 
 expect_price=pd.DataFrame(protfolio['expect_price'])
 volatility=pd.DataFrame(protfolio['volatility'])
+
+histcal_price=pd.DataFrame([train_test_data[i]['X_test'].price for i in currenies]).T
+histcal_price.columns=currenies
+histcal_bid=pd.DataFrame([train_test_data[i]['X_test'].BP1 for i in currenies]).T
+histcal_bid.columns=currenies
+histcal_ask=pd.DataFrame([train_test_data[i]['X_test'].AP1 for i in currenies]).T
+histcal_ask.columns=currenies
+
+expect_price.index=train_test_data[currenies[0]]['X_test'].index
+volatility.index=train_test_data[currenies[0]]['X_test'].index
 
 
