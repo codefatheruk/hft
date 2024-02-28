@@ -16,21 +16,21 @@ start_date = mid_price.iloc[0]["Date"]
 end_date = mid_price.iloc[-1]["Date"]
 
 # Define the rebalancing frequency (e.g., '1M' for monthly)c
-rebalance_freq = '5min'
+rebalance_freq = '30min'
 
 # Generate a date range for rebalancing
 date_range = pd.date_range(start=start_date, end=end_date, freq=rebalance_freq)
 portfolio_performance = pd.DataFrame(index=date_range, columns=['Return'])
 
 # Now try with a nonconvex objective from  Kolm et al (2014)
-def deviation_risk_parity(w, cov_matrix):
-    diff = w * np.dot(cov_matrix, w) - (w * np.dot(cov_matrix, w)).reshape(-1, 1)
-    return (diff**2).sum().sum()
+#def deviation_risk_parity(w, cov_matrix):
+#    diff = w * np.dot(cov_matrix, w) - (w * np.dot(cov_matrix, w)).reshape(-1, 1)
+#    return (diff**2).sum().sum()
 
 
 S = risk_models.sample_cov(mid_price[tickers])
-S = 10000*S
-S = 10000*S
+#S = 10000*S
+#S = 10000*S
 print(S)
 
 
@@ -54,10 +54,12 @@ for i in range(len(date_range)-1):
         continue
     mu = expected_returns.mean_historical_return(df[tickers])
     mu = 10000*mu
+    S = risk_models.sample_cov(df[tickers])
+    S = 10000**2*S
     #print(mu)
     
     #print(mu)
-    ef = EfficientFrontier(mu, S, weight_bounds=(-1, 1))
+    ef = EfficientFrontier(mu, S, weight_bounds=(0,1))
     weights = ef.max_quadratic_utility() #ef.max_sharpe()
     #weights = ef.nonconvex_objective(deviation_risk_parity, ef.cov_matrix)
     print(weights)
