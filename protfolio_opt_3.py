@@ -7,16 +7,16 @@ import matplotlib.pyplot as plt
 os.chdir('/Users/macbookpro/Documents/data')
 
 mid_price = pd.read_csv("mid_price.csv", index_col=0, parse_dates=True)
-portfolio_performance = pd.DataFrame(index=mid_price.index[500:], columns=['Return'])
+#portfolio_performance = pd.DataFrame(index=mid_price.index[100:], columns=['Return'])
 tickers = list(mid_price.columns)
 current_value = 1.0
 current_portfolio = [1.0 / 3 / mid_price[ticker].iloc[0] for ticker in mid_price.columns]
 
 portfolio_performance =[]
 
-for i in range(500, len(mid_price.index)):
+for i in range(10, len(mid_price.index)):
    
-    df = mid_price[(mid_price.index > mid_price.index[i-500]) & (mid_price.index <= mid_price.index[i])]
+    df = mid_price[(mid_price.index > mid_price.index[i-10]) & (mid_price.index <= mid_price.index[i])]
     if df.shape[0] < 1:
         continue
     mu = expected_returns.mean_historical_return(df[tickers])
@@ -40,8 +40,7 @@ for i in range(500, len(mid_price.index)):
         print("finished")
 
 # Print the portfolio performance
-print(portfolio_performance)
-portfolio_performance.to_csv("portfolio_performance.csv")
+#print(portfolio_performance)
+#portfolio_performance.to_csv("portfolio_performance.csv")
 plt.plot(portfolio_performance)
-plt.show()
-
+plt.savefig('efficient_frontier_plot.png')  # Save the figure
