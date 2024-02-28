@@ -29,6 +29,8 @@ def deviation_risk_parity(w, cov_matrix):
 
 
 S = risk_models.sample_cov(mid_price[tickers])
+S = 10000*S
+S = 10000*S
 print(S)
 
 
@@ -51,12 +53,14 @@ for i in range(len(date_range)-1):
     if(df.shape[0] < 1):
         continue
     mu = expected_returns.mean_historical_return(df[tickers])
+    mu = 10000*mu
+    #print(mu)
     
     #print(mu)
     ef = EfficientFrontier(mu, S, weight_bounds=(-1, 1))
-    #ef._risk_free_rate = 0.01
-    weights = ef.nonconvex_objective(deviation_risk_parity, ef.cov_matrix)
-    #print(weights)
+    weights = ef.max_quadratic_utility() #ef.max_sharpe()
+    #weights = ef.nonconvex_objective(deviation_risk_parity, ef.cov_matrix)
+    print(weights)
     #print(ef._risk_free_rate)
     #ef.portfolio_performance(verbose=True,risk_free_rate=0.0000000002)
     current_value = current_portfolio[0]*df["USDCAD"].iloc[-1]+current_portfolio[1]*df["EURUSD"].iloc[-1]+current_portfolio[2]*df["GBPUSD"].iloc[-1]
@@ -70,5 +74,3 @@ for i in range(len(date_range)-1):
 # Print the portfolio performance
 print(portfolio_performance)
 portfolio_performance.to_csv("portfolio_performance.csv")
-
-Thanks a lot.Thanks, I'll check it out.Fixed!
