@@ -162,3 +162,17 @@ expect_price.index=train_test_data[currenies[0]]['X_test'].index
 volatility.index=train_test_data[currenies[0]]['X_test'].index
 expect_price=pd.concat([histcal_price.head(30),expect_price],axis=0)
 volatility=pd.concat([histcal_price.head(30),volatility],axis=0)
+
+
+expected_return=expect_price.shift(-1)-histcal_price
+expected_return.dropna(inplace=True)
+expected_mean_return=expected_return.rolling(31).mean()
+expected_mean_return.dropna(inplace=True)
+
+expected_cov_return=expected_return.rolling(31).cov()
+expected_cov_return.dropna(inplace=True)
+
+expected_return=expected_return.loc[expected_mean_return.index]
+
+
+
