@@ -4,11 +4,30 @@ from pypfopt.efficient_frontier import EfficientFrontier
 from pypfopt import risk_models, expected_returns
 import os
 import matplotlib.pyplot as plt
-os.chdir('/Users/macbookpro/Documents/data')
+from glob import glob
+os.chdir('/Users/macbookpro/Documents/data/aws_data/20s/')
+forecast_file=glob('*.csv')
 
-mid_price = pd.read_csv("mid_price.csv", index_col=0, parse_dates=True)
-#portfolio_performance = pd.DataFrame(index=mid_price.index[100:], columns=['Return'])
-tickers = list(mid_price.columns)
+dates=list(set([i.split('_')[1].split('.')[0] for i in forecast_file]))
+tickers=list(set([i.split('_')[0] for i in forecast_file]))
+forecast_file={i:[j for j in forecast_file if i in j] for i in tickers}
+os.chdir('/Users/macbookpro/Documents/data/')
+file_names=glob('*.zip')
+
+data_file=[i for i in file_names if i.split('_')[2] in dates and i.split('_')[-1].split('.')[0] in tickers]
+data_file={i:[j for j in forecast_file if i in j] for i in tickers}
+data={i:pd.DataFrame() for i in tickers}
+for i in data_file:
+    for j in tickers:
+        if j in i:
+            data[j]=pd.concat([data[j], pd.read_csv(i, index_col=0, parse_dates=True)], axis=1)
+
+forecast_data={i:pd.DataFrame() for i in tickers}
+for i in forecast_file:
+    for j in tickers:
+        if j in i:
+            forecast_data[j]=pd.concat([forecast_data[j], pd.read_csv(i, index_col=0, parse_dates=True)], axis=1)
+
 current_value = 1.0
 current_portfolio = [1.0 / 3 / mid_price[ticker].iloc[0] for ticker in mid_price.columns]
 
