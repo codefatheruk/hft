@@ -5,8 +5,8 @@ from pypfopt import risk_models, expected_returns
 import os
 import matplotlib.pyplot as plt
 from glob import glob
-os.chdir('/Users/macbookpro/Documents/data/aws_data/20s/')
-forecast_file=glob('*.csv')
+
+forecast_file=glob('/Users/macbookpro/Documents/data/aws_data/20s/*.csv')
 
 dates=list(set([i.split('_')[1].split('.')[0] for i in forecast_file]))
 tickers=list(set([i.split('_')[0] for i in forecast_file]))
@@ -15,12 +15,13 @@ os.chdir('/Users/macbookpro/Documents/data/')
 file_names=glob('*.zip')
 
 data_file=[i for i in file_names if i.split('_')[2] in dates and i.split('_')[-1].split('.')[0] in tickers]
-data_file={i:[j for j in forecast_file if i in j] for i in tickers}
+data_file={i:[j for j in data_file if i in j] for i in tickers}
+
 data={i:pd.DataFrame() for i in tickers}
-for i in data_file:
-    for j in tickers:
-        if j in i:
-            data[j]=pd.concat([data[j], pd.read_csv(i, index_col=0, parse_dates=True)], axis=1)
+
+for i in data_file.keys():
+    for j in data_file[i][:3]:
+        data[i]=pd.concat([data[i], pd.read_csv(j, index_col=0, parse_dates=True)], axis=1)
 
 forecast_data={i:pd.DataFrame() for i in tickers}
 for i in forecast_file:
