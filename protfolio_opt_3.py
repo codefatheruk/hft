@@ -11,8 +11,8 @@ forecast_file=glob('/Users/macbookpro/Documents/data/aws_data/20s/*.csv')
 dates=list(set([i.split('_')[1].split('.')[0] for i in forecast_file]))
 tickers=list(set([i.split('_')[0] for i in forecast_file]))
 forecast_file={i:[j for j in forecast_file if i in j] for i in tickers}
-os.chdir('/Users/macbookpro/Documents/data/')
-file_names=glob('*.zip')
+
+file_names=glob('/Users/macbookpro/Documents/data/*.zip')
 
 data_file=[i for i in file_names if i.split('_')[2] in dates and i.split('_')[-1].split('.')[0] in tickers]
 data_file={i:[j for j in data_file if i in j] for i in tickers}
