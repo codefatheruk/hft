@@ -6,61 +6,50 @@ import os
 import matplotlib.pyplot as plt
 from glob import glob
 
-forecast_file=glob('/Users/macbookpro/Documents/data/aws_data/20s/*.csv')
+df=pd.read_csv("C:/Users/rouho/Documents/GitHub/aws/60s_prediction.csv",index_col=0,parse_dates=True)
+tickers=list(set(i.split('_')[0] for i in df.columns))
+names=list(set(i.split('_')[1] for i in df.columns))
+main_df={i:pd.DataFrame() for i in names}
+for i in names:
+    c_name=[j for j in df.columns if i in j]
+    temp_df=df[c_name]
+    main_df[i]=pd.concat([main_df[i],temp_df],axis=1)
+    main_df[i].columns=[j.split('_')[0] for j in main_df[i].columns]
+    del temp_df
 
-dates=list(set([i.split('_')[1].split('.')[0] for i in forecast_file]))
-tickers=list(set([i.split('_')[0] for i in forecast_file]))
-forecast_file={i:[j for j in forecast_file if i in j] for i in tickers}
-os.chdir('/Users/macbookpro/Documents/data/')
-file_names=glob('*.zip')
+expected_price=(main_df['pos']*0.0001)-(main_df['neg']*0.0001)+main_df['price']
 
-data_file=[i for i in file_names if i.split('_')[2] in dates and i.split('_')[-1].split('.')[0] in tickers]
-data_file={i:[j for j in data_file if i in j] for i in tickers}
 
-data={i:pd.DataFrame() for i in tickers}
-
-for i in data_file.keys():
-    for j in data_file[i][:3]:
-        data[i]=pd.concat([data[i], pd.read_csv(j, index_col=0, parse_dates=True)], axis=1)
-
-forecast_data={i:pd.DataFrame() for i in tickers}
-for i in forecast_file:
-    for j in tickers:
-        if j in i:
-            forecast_data[j]=pd.concat([forecast_data[j], pd.read_csv(i, index_col=0, parse_dates=True)], axis=1)
-
-current_value = 1.0
-current_portfolio = [1.0 / 3 / mid_price[ticker].iloc[0] for ticker in mid_price.columns]
+current_portfolio = [1.0 / 3 / main_df['price'][i].iloc[0] for i in tickers]
 
 portfolio_performance =[]
 
-for i in range(10, len(mid_price.index)):
-   
-    df = mid_price[(mid_price.index > mid_price.index[i-10]) & (mid_price.index <= mid_price.index[i])]
+for i in range(50, len(main_df['price'].index)):
+
+    df = expected_price.iloc[i-50:i]
+    df2 = main_df['price'].iloc[i-50:i]
     if df.shape[0] < 1:
         continue
-    mu = expected_returns.mean_historical_return(df[tickers])
-    mu = 10000 * mu
+    mu = pd.Series( main_df['ExcpectReturn'].iloc[i].values,index=[0,1,2])
     S = risk_models.sample_cov(df[tickers])
     S = 10000 ** 2 * S
     # print(mu)
-    
+
     # print(mu)
     ef = EfficientFrontier(mu, S, weight_bounds=(-1, 1))
-    weights = ef.max_quadratic_utility()  # ef.max_sharpe()
+    weights =ef.max_quadratic_utility()  
+    #weights =ef.max_sharpe(risk_free_rate=-10)  
 
     print(weights)
-    
-    current_value = current_portfolio[0] * df["USDCAD"].iloc[-1] + current_portfolio[1] * df["EURUSD"].iloc[-1] + current_portfolio[2] * df["GBPUSD"].iloc[-1]
-    current_portfolio = [current_value * weights["USDCAD"] / df["USDCAD"].iloc[-1], 
-                         current_value * weights["EURUSD"] / df["EURUSD"].iloc[-1], 
-                         current_value * weights["GBPUSD"] / df["GBPUSD"].iloc[-1]]
-    portfolio_performance.append(current_value)
-    if mu["EURUSD"] == 0:
-        print("finished")
 
-# Print the portfolio performance
-#print(portfolio_performance)
-#portfolio_performance.to_csv("portfolio_performance.csv")
+    current_value = current_portfolio[0] * df2[tickers[0]].iloc[-1] + current_portfolio[1] * df2[tickers[1]].iloc[-1] + current_portfolio[2] * df2[tickers[2]].iloc[-1]
+    current_portfolio = [current_value * weights[0] / df2[tickers[0]].iloc[-1],
+                         current_value * weights[1] / df2[tickers[1]].iloc[-1],
+                         current_value * weights[2] / df2[tickers[2]].iloc[-1]]
+    portfolio_performance.append(current_value)
+
 plt.plot(portfolio_performance)
-plt.savefig('efficient_frontier_plot.png')  # Save the figure
+plt.show()
+plt.savefig('efficient_frontier_plot2.png')  # Save the figure
+
+
