@@ -25,28 +25,30 @@ current_portfolio = [1.0 / 3 / main_df['price'][i].iloc[0] for i in tickers]
 portfolio_performance =[]
 
 for i in range(50, len(main_df['price'].index)):
-
-    df = expected_price.iloc[i-50:i]
-    df2 = main_df['price'].iloc[i-50:i]
-    if df.shape[0] < 1:
-        continue
-    mu = pd.Series( main_df['ExcpectReturn'].iloc[i].values,index=[0,1,2])
-    S = risk_models.sample_cov(df[tickers])
-    S = 10000 ** 2 * S
+    try:
+        df = expected_price.iloc[i-50:i]
+        df2 = main_df['price'].iloc[i-50:i]
+        if df.shape[0] < 1:
+            continue
+        mu = pd.Series( main_df['ExcpectReturn'].iloc[i].values,index=[0,1,2])
+        S = risk_models.sample_cov(df[tickers])
+        S = 10000 ** 2 * S
     # print(mu)
 
     # print(mu)
-    ef = EfficientFrontier(mu, S, weight_bounds=(-1, 1))
-    weights =ef.max_quadratic_utility()  
+        ef = EfficientFrontier(mu, S, weight_bounds=(-1, 1))
+        weights =ef.max_quadratic_utility()  
     #weights =ef.max_sharpe(risk_free_rate=-10)  
 
-    print(weights)
+        print(weights)
 
-    current_value = current_portfolio[0] * df2[tickers[0]].iloc[-1] + current_portfolio[1] * df2[tickers[1]].iloc[-1] + current_portfolio[2] * df2[tickers[2]].iloc[-1]
-    current_portfolio = [current_value * weights[0] / df2[tickers[0]].iloc[-1],
-                         current_value * weights[1] / df2[tickers[1]].iloc[-1],
-                         current_value * weights[2] / df2[tickers[2]].iloc[-1]]
-    portfolio_performance.append(current_value)
+        current_value = current_portfolio[0] * df2[tickers[0]].iloc[-1] + current_portfolio[1] * df2[tickers[1]].iloc[-1] + current_portfolio[2] * df2[tickers[2]].iloc[-1]
+        current_portfolio = [current_value * weights[0] / df2[tickers[0]].iloc[-1],
+                             current_value * weights[1] / df2[tickers[1]].iloc[-1],
+                             current_value * weights[2] / df2[tickers[2]].iloc[-1]]
+        portfolio_performance.append(current_value)
+    except:
+        pass
 
 plt.plot(portfolio_performance)
 plt.show()
